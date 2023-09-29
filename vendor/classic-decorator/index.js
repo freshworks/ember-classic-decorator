@@ -48,12 +48,25 @@
     while (klass !== null && Boolean(klass.prototype)) {
       if (predicate(klass)) {
         return klass;
+      } else if (isEmberDataInternal(klass)) {
+        return null;
       }
 
       klass = Object.getPrototypeOf(klass);
     }
 
     return null;
+  }
+
+  // Method added to skip validation for ember-data internal classes in ember version > 3.28. ember-classic-decorator repo has stopped support for latest ember versions
+  function isEmberDataInternal(klass) {
+    var prototype = klass.prototype;
+
+    return (prototype.hasOwnProperty('normalize') && prototype.hasOwnProperty('serialize')) // check for serializer
+      || (prototype.hasOwnProperty('createRecord') && prototype.hasOwnProperty('deleteRecord') && prototype.hasOwnProperty('saveRecord')) // check for store
+      || (prototype.hasOwnProperty('findRecord') && prototype.hasOwnProperty('findAll') && prototype.hasOwnProperty('query')) // check for adapter
+      || (prototype.hasOwnProperty('serialize') && prototype.hasOwnProperty('deserialize')) // check for transform
+      || (prototype.hasOwnProperty('hasDirtyAttributes') && prototype.hasOwnProperty('isSaving') && prototype.hasOwnProperty('isDeleted')) // check for model
   }
 
   _Ember.Object.reopenClass({
